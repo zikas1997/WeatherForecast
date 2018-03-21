@@ -12,8 +12,12 @@ import ru.teligent.weatherforecast.cityDB.archive.ArchiveWorker;
 import ru.teligent.weatherforecast.cityDB.dao.CityInformationRepository;
 import ru.teligent.weatherforecast.cityDB.downloader.DownloaderFile;
 import ru.teligent.weatherforecast.cityDB.model.CityInformation;
+import ru.teligent.weatherforecast.properties.VariableConfig;
+import ru.teligent.weatherforecast.weather.http.HttpApacheClient;
+import ru.teligent.weatherforecast.weather.json.CreatorCollectionCityInformationForJson;
 
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,66 +28,74 @@ public class WeatherForecastApplicationTests {
     @Autowired
     CityInformationRepository cityInformationRepository;
 
-    private static final String urlWeatherCity = "http://bulk.openweathermap.org/sample/city.list.json.gz";
-    private static final String locationDownload = "./src/main/city/"; /* Сюда записываеться путь куда будет сохраняться файл, а также куда будет распоковвывться архив расположения архива*/
-    private static final String nameArchive = "city.list.json.gz";
+
     private List<CityInformation> cityInformationList = new ArrayList<>();
 
-    @Test
+    // @Test
     public void testDownload() {
         downloadFile();
     }
 
-    @Test
+    // @Test
     public void testUnarchive() {
         unarchive();
     }
 
-    @Test
+    //   @Test
     public void testJsonReader() {
         json();
     }
 
-    @Test
+    //@Test
     public void testRepository() {
         System.out.println("Start!");
         json();
         addCityInformationList();
         System.out.println("End!");
-        findAll();
     }
+
+    //@Test
+    public void testConfig() {
+        System.out.println("getLocationDownload() " + VariableConfig.getLocationDownload());
+
+        System.out.println("getUrlWeatherCity() " + VariableConfig.getUrlWeatherCity());
+
+        System.out.println("getNameArchive() " + VariableConfig.getNameArchive());
+    }
+
+    @Test
+    public void testRequestOpenweathermap() {
+        HttpApacheClient httpApacheClient = new HttpApacheClient();
+        String response = "";
+        try {
+            response = httpApacheClient.getResponse("http://api.openweathermap.org/data/2.5/forecast?id=542420&appid=5416f954bc04f165f0a04802d9cdb2a6");
+        } catch (IOException e) {
+            System.out.println("Нет доступа к сервису.");
+        }
+        System.out.println("Response json: " + response);
+    }
+
 
     private void downloadFile() {
         DownloaderFile archive = new DownloaderFile();
-        archive.downloadUsingStream(urlWeatherCity, locationDownload + nameArchive);
+        archive.downloadUsingStream(VariableConfig.getUrlWeatherCity(), VariableConfig.getLocationDownload() + VariableConfig.getNameArchive());
     }
 
     private void unarchive() {
         ArchiveWorker archiveWorker = new ArchiveWorker();
-        archiveWorker.unarchive(locationDownload + nameArchive);
+        archiveWorker.unarchive(VariableConfig.getLocationDownload() + VariableConfig.getNameArchive());
     }
 
     private void json() {
-        JSONParser parser = new JSONParser();
-        try {
-            Object obj = parser.parse(new FileReader(locationDownload + "city.list.json"));
-            JSONArray jsonArray = (JSONArray) obj;
-            for (Object object : jsonArray) {
-                JSONObject jsonObject = (JSONObject) object;
-                CityInformation cityInformation = new CityInformation((long) jsonObject.get("id"), jsonObject.get("name").toString(), jsonObject.get("country").toString());
-                cityInformationList.add(cityInformation);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        CreatorCollectionCityInformationForJson creatorCollectionCityInformationForJson = new CreatorCollectionCityInformationForJson();
+        cityInformationList = creatorCollectionCityInformationForJson.getCityList();
     }
 
-    private void addCityInformationList(){
+    private void addCityInformationList() {
         cityInformationRepository.saveAll(cityInformationList);
     }
 
-    private void findAll(){
+    private void findAll() {
         List<CityInformation> cityInformationList1 = cityInformationRepository.findAll();
-        System.out.println("");
     }
 }

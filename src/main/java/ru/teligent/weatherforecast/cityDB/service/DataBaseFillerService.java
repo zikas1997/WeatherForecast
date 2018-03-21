@@ -1,14 +1,20 @@
 package ru.teligent.weatherforecast.cityDB.service;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import ru.teligent.weatherforecast.cityDB.archive.ArchiveWorker;
+import ru.teligent.weatherforecast.cityDB.dao.CityInformationRepository;
 import ru.teligent.weatherforecast.cityDB.downloader.DownloaderFile;
+import ru.teligent.weatherforecast.cityDB.model.CityInformation;
+import ru.teligent.weatherforecast.properties.VariableConfig;
+import ru.teligent.weatherforecast.weather.json.CreatorCollectionCityInformationForJson;
+
+import java.util.List;
 
 public class DataBaseFillerService {
 
-    private static final String url = "http://bulk.openweathermap.org/sample/city.list.json.gz";
-    private static String location = "./src/main/resources/"; /* Сюда записываеться путь куда будет сохраняться файл, а также куда будет распоковвывться архив расположения архива*/
-    private static final String nameArchive = "city.list.json.gz";
+    @Autowired
+    CityInformationRepository cityInformationRepository;
 
     public DataBaseFillerService() {
     }
@@ -17,14 +23,18 @@ public class DataBaseFillerService {
 
         //Скачиваем файл
         DownloaderFile archive = new DownloaderFile();
-        archive.downloadUsingStream( url, location + nameArchive);
+        archive.downloadUsingStream( VariableConfig.getUrlWeatherCity(), VariableConfig.getLocationDownload() + VariableConfig.getNameArchive());
 
         //Разархивируем его
         ArchiveWorker archiveWorker = new ArchiveWorker();
-        archiveWorker.unarchive(location + nameArchive);
+        archiveWorker.unarchive(VariableConfig.getLocationDownload() + VariableConfig.getNameArchive());
 
         //Подготавливаем коллекцию для записи
+        CreatorCollectionCityInformationForJson creatorCollectionCityInformationForJson = new CreatorCollectionCityInformationForJson();
+        List<CityInformation> cityList = creatorCollectionCityInformationForJson.getCityList();
 
+        //Запись в бд
+        cityInformationRepository.saveAll(cityList);
     }
 
 }
