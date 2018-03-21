@@ -1,4 +1,4 @@
-package ru.teligent.weatherforecast.weather;
+package ru.teligent.weatherforecast;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
