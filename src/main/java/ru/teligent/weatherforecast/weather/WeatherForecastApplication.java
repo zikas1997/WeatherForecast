@@ -1,12 +1,12 @@
-package ru.teligent.weatherforecast;
+package ru.teligent.weatherforecast.weather;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class WeatherforecastApplication {
+public class WeatherForecastApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(WeatherforecastApplication.class, args);
+		SpringApplication.run(WeatherForecastApplication.class, args);
 	}
 }
